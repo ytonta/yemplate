@@ -26,9 +26,11 @@
     "gulp": "^3.9.1",
     "gulp-nodemon": "^2.1.0",
     "gulp-pug": "^3.0.4",
+    "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.2.0",
     "morgan": "^1.7.0",
     "pug": "^0.1.0",
-    "serve-favicon": "~2.3.0"
+    "serve-favicon": "~2.3.0",
+    "webpack-stream": "^3.2.0"
   }
 }
