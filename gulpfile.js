@@ -22,7 +22,7 @@ var config = {
     outputFile: 'main.css'
   },
   scripts: {
-    inputDir: './app/scripts/app.js',
+    inputDir: './app/scripts/**/*.js',
     outputDir: './dist/js',
     outputFile: 'main.js'
   }
@@ -48,25 +48,15 @@ gulp.task('sass', function () {
 gulp.task('js', function() {
   return gulp.src(config.scripts.inputDir)
     .pipe(webpack( webpackConfig ))
-    .pipe(gulp.dest(config.scripts.outputDir));
-    // .pipe(reload({ stream: true }));
-});
-
-gulp.task('webpack', function() {
-  var myConfig = Object.create(webpackConfig);
-
-  new WebpackDevServer(webpack2(myConfig), {
-    publicPath: config.html.outputDir,
-    stats: {
-      colors: true
-    }
-  }).listen(8080, 'localhost');
+    .pipe(gulp.dest(config.scripts.outputDir))
+    .pipe(reload({ stream: true }));
 });
 
 // Rerun the task when a file changes
 gulp.task('watch', function() {
   gulp.watch(config.css.inputDir, ['sass']);
   gulp.watch(config.html.inputDir, ['views']);
+  gulp.watch(config.scripts.inputDir, ['js']);
 });
 
 // Start the server
@@ -101,4 +91,4 @@ gulp.task('start', ['nodemon'], function () {
 });
 
 // Default task
-gulp.task('default', ['webpack', 'watch', 'views', 'sass', 'js'], function() {});
+gulp.task('default', ['start', 'watch', 'views', 'sass', 'js'], function() {});
