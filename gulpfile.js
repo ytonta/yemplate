@@ -1,15 +1,12 @@
 var gulp          = require('gulp');
 var sass          = require('gulp-sass');
+var cssnano       = require('gulp-cssnano');
 var pug           = require('gulp-pug');
 var nodemon       = require('gulp-nodemon')
 var rename        = require('gulp-rename');
 var browserSync   = require('browser-sync').create();
 var reload        = browserSync.reload;
 var htmlInjector  = require('bs-html-injector');
-var webpack       = require('webpack-stream');
-var webpack2      = require('webpack');
-var webpackConfig = require('./webpack.config.js');
-var WebpackDevServer = require('webpack-dev-server');
 
 var config = {
   html: {
@@ -20,6 +17,10 @@ var config = {
     inputDir: './app/sass/**/*.scss',
     outputDir: './dist/css',
     outputFile: 'main.css'
+  },
+  icons: {
+    inputDir: './node_modules/material-design-icons/iconfont/*.+(eot|svg|ttf|woff|woff2)',
+    outputDir: './dist/fonts/icons'
   },
   scripts: {
     inputDir: './app/scripts/**/*.js',
@@ -39,24 +40,28 @@ gulp.task('views', function () {
 gulp.task('sass', function () {
   return gulp.src(config.css.inputDir)
     .pipe(sass().on('error', sass.logError))
+    .pipe(cssnano())
     .pipe(rename('main.css'))
     .pipe(gulp.dest(config.css.outputDir))
     .pipe(reload({ stream: true }));
 });
 
-// Webpack function, bundles the js
-gulp.task('js', function() {
-  return gulp.src(config.scripts.inputDir)
-    .pipe(webpack( webpackConfig ))
-    .pipe(gulp.dest(config.scripts.outputDir))
-    .pipe(reload({ stream: true }));
+// Copy font from node modules to font folder
+gulp.task('fonts', function() {
+  return gulp.src(config.fonts.inputDir)
+    .pipe(gulp.dest(config.fonts.outputDir));
+})
+
+gulp.task('icons', function () {
+  return gulp.src(config.icons.inputDir)
+    .pipe(gulp.dest(config.icons.outputDir));
 });
 
 // Rerun the task when a file changes
 gulp.task('watch', function() {
   gulp.watch(config.css.inputDir, ['sass']);
   gulp.watch(config.html.inputDir, ['views']);
-  gulp.watch(config.scripts.inputDir, ['js']);
+  // gulp.watch(config.scripts.inputDir, ['js']);
 });
 
 // Start the server
@@ -91,4 +96,4 @@ gulp.task('start', ['nodemon'], function () {
 });
 
 // Default task
-gulp.task('default', ['start', 'watch', 'views', 'sass', 'js'], function() {});
+gulp.task('default', ['start', 'watch', 'views', 'sass', 'fonts', 'icons'], function() {});
