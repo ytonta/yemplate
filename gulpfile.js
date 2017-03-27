@@ -7,6 +7,8 @@ var rename        = require('gulp-rename');
 var browserSync   = require('browser-sync').create();
 var reload        = browserSync.reload;
 var htmlInjector  = require('bs-html-injector');
+var browserify    = require('browserify');
+var source        = require('vinyl-source-stream');
 
 var config = {
   html: {
@@ -23,7 +25,7 @@ var config = {
     outputDir: './dist/fonts/icons'
   },
   scripts: {
-    inputDir: './app/scripts/**/*.js',
+    inputDir: './app/scripts/app.js',
     outputDir: './dist/js',
     outputFile: 'main.js'
   }
@@ -41,16 +43,20 @@ gulp.task('sass', function () {
   return gulp.src(config.css.inputDir)
     .pipe(sass().on('error', sass.logError))
     .pipe(cssnano())
-    .pipe(rename('main.css'))
+    .pipe(rename(config.css.outputFile))
     .pipe(gulp.dest(config.css.outputDir))
     .pipe(reload({ stream: true }));
 });
 
-// Copy font from node modules to font folder
-gulp.task('fonts', function() {
-  return gulp.src(config.fonts.inputDir)
-    .pipe(gulp.dest(config.fonts.outputDir));
-})
+// Compiles the JS with browserify
+gulp.task('browserify', function() {
+  return browserify(config.scripts.inputDir)
+    .bundle()
+    //Pass desired output filename to vinyl-source-stream
+    .pipe(source(config.scripts.outputFile))
+    // Start piping stream to tasks!
+    .pipe(gulp.dest(config.scripts.outputDir));
+});
 
 gulp.task('icons', function () {
   return gulp.src(config.icons.inputDir)
@@ -96,4 +102,4 @@ gulp.task('start', ['nodemon'], function () {
 });
 
 // Default task
-gulp.task('default', ['start', 'watch', 'views', 'sass', 'fonts', 'icons'], function() {});
+gulp.task('default', ['start', 'watch', 'views', 'sass', 'icons', 'browserify'], function() {});
