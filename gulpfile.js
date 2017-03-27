@@ -9,7 +9,9 @@ var reload        = browserSync.reload;
 var htmlInjector  = require('bs-html-injector');
 var browserify    = require('browserify');
 var watchify      = require('watchify');
+var uglify        = require('gulp-uglify');
 var source        = require('vinyl-source-stream');
+var buffer        = require('vinyl-buffer');
 var assign        = require('lodash.assign');
 var gutil         = require('gulp-util');
 
@@ -42,7 +44,7 @@ var customOpts = {
 };
 
 var opts = assign({}, watchify.args, customOpts);
-var browserifyWatch = watchify(browserify(opts));
+var b = watchify(browserify(opts));
 
 // Compiles the pug to html
 gulp.task('views', function () {
@@ -63,16 +65,18 @@ gulp.task('sass', function () {
 
 // Compiles the JS with browserify
 gulp.task('browserify', bundle); // so you can run `gulp js` to build the file
-browserifyWatch.on('update', bundle); // on any dep update, runs the bundler
-browserifyWatch.on('log', gutil.log); // output build logs to terminal
+b.on('update', bundle); // on any dep update, runs the bundler
+b.on('log', gutil.log); // output build logs to terminal
 
 function bundle() {
-  return browserifyWatch.bundle()
+  return b.bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
     .pipe(source(config.scripts.outputFile))
+    .pipe(buffer())
+    .pipe(uglify())
     .pipe(gulp.dest(config.scripts.outputDir))
-    .pipe(browserSync.reload({ stream: true }));
+    .pipe(reload({ stream: true }));
 }
 
 gulp.task('icons', function () {
