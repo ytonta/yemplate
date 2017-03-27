@@ -8,8 +8,12 @@ var browserSync   = require('browser-sync').create();
 var reload        = browserSync.reload;
 var htmlInjector  = require('bs-html-injector');
 var browserify    = require('browserify');
+var watchify      = require('watchify');
 var source        = require('vinyl-source-stream');
+var assign        = require('lodash.assign');
+var gutil         = require('gulp-util');
 
+// Files paths
 var config = {
   html: {
     inputDir: './app/views/**/*.pug',
@@ -31,6 +35,15 @@ var config = {
   }
 };
 
+// Browserify options
+var customOpts = {
+  entries: [config.scripts.inputDir],
+  debug: true
+};
+
+var opts = assign({}, watchify.args, customOpts);
+var browserifyWatch = watchify(browserify(opts));
+
 // Compiles the pug to html
 gulp.task('views', function () {
   return gulp.src(config.html.inputDir)
@@ -49,14 +62,18 @@ gulp.task('sass', function () {
 });
 
 // Compiles the JS with browserify
-gulp.task('browserify', function() {
-  return browserify(config.scripts.inputDir)
-    .bundle()
-    //Pass desired output filename to vinyl-source-stream
+gulp.task('browserify', bundle); // so you can run `gulp js` to build the file
+browserifyWatch.on('update', bundle); // on any dep update, runs the bundler
+browserifyWatch.on('log', gutil.log); // output build logs to terminal
+
+function bundle() {
+  return browserifyWatch.bundle()
+    // log errors if they happen
+    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
     .pipe(source(config.scripts.outputFile))
-    // Start piping stream to tasks!
-    .pipe(gulp.dest(config.scripts.outputDir));
-});
+    .pipe(gulp.dest(config.scripts.outputDir))
+    .pipe(browserSync.reload({ stream: true }));
+}
 
 gulp.task('icons', function () {
   return gulp.src(config.icons.inputDir)
